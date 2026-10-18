@@ -1,0 +1,674 @@
+/* ==========================================================================
+   GenSet Configurator - screen styles
+   1. Design tokens (custom properties)
+   2. Base / reset
+   3. Page layout
+   4. Header and footer
+   5. Progress indicator
+   6. Steps and choice cards
+   7. Buttons
+   8. Notices and errors
+   9. Summary panel and review list
+   10. Utilities
+   ========================================================================== */
+
+/* 1. Design tokens --------------------------------------------------------- */
+:root {
+  /* Colours */
+  --color-bg: #f3f6f9;
+  --color-surface: #ffffff;
+  --color-surface-alt: #eef3f7;
+  --color-text: #14212b;
+  --color-text-muted: #52606d;
+  --color-border: #d3dce5;
+  --color-primary: #0b5c8a;
+  --color-primary-strong: #084669;
+  --color-primary-soft: #e2eff7;
+  --color-on-primary: #ffffff;
+  --color-header: #0a2a40;
+  --color-on-header: #ffffff;
+  --color-danger: #b42318;
+  --color-danger-soft: #fdecea;
+  --color-warning-text: #7a4f00;
+  --color-warning-soft: #fff4d6;
+  --color-warning-border: #f0c45a;
+  --color-focus: #d9480f;
+
+  /* Spacing scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+
+  /* Shape and depth */
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 2px rgb(10 42 64 / 0.06), 0 4px 16px rgb(10 42 64 / 0.06);
+
+  /* Type */
+  --font-body: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --text-sm: 0.875rem;
+  --text-lg: 1.25rem;
+
+  --content-max: 72rem;
+  --summary-width: 22rem;
+}
+
+/* Dark mode: only the colour tokens change, every component follows. */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #0d1820;
+    --color-surface: #15232e;
+    --color-surface-alt: #1c2d3a;
+    --color-text: #e6edf3;
+    --color-text-muted: #9fb0bf;
+    --color-border: #2c4152;
+    --color-primary: #5bb3e6;
+    --color-primary-strong: #8ccbf0;
+    --color-primary-soft: #183447;
+    --color-on-primary: #08202f;
+    --color-header: #08141c;
+    --color-danger: #ff8a7a;
+    --color-danger-soft: #3a1a17;
+    --color-warning-text: #ffd27a;
+    --color-warning-soft: #33280f;
+    --color-warning-border: #7a5c1c;
+    --color-focus: #ffa94d;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.3);
+  }
+}
+
+/* 2. Base / reset ---------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  line-height: 1.5;
+}
+
+h1, h2, h3, p, dl, dd, ul, ol, fieldset {
+  margin: 0;
+}
+
+ul, ol, fieldset, legend {
+  padding: 0;
+}
+
+fieldset {
+  border: 0;
+  min-width: 0; /* stops fieldsets overflowing grid columns */
+}
+
+/* The hidden attribute must always win over display rules below. */
+[hidden] {
+  display: none !important;
+}
+
+/* One focus style everywhere, only for keyboard users (:focus-visible). */
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* 3. Page layout ----------------------------------------------------------- */
+/* Mobile first: one column, summary below the form. */
+.layout {
+  flex: 1;
+  width: 100%;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+  align-items: start;
+  align-content: start; /* don't stretch rows to fill a tall page */
+}
+
+/* Desktop: form on the left, sticky summary on the right. */
+@media (min-width: 60rem) {
+  .layout {
+    grid-template-columns: minmax(0, 1fr) var(--summary-width);
+    gap: var(--space-5);
+    padding: var(--space-5);
+  }
+
+  .summary {
+    position: sticky;
+    top: var(--space-5);
+  }
+}
+
+.configurator {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--space-4);
+}
+
+@media (min-width: 40rem) {
+  .card {
+    padding: var(--space-5);
+  }
+}
+
+/* 4. Header and footer ----------------------------------------------------- */
+.site-header {
+  background: var(--color-header);
+  color: var(--color-on-header);
+}
+
+.site-header__inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+  padding: var(--space-3) var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.brand-mark {
+  width: 2.25rem;
+  height: 2.25rem;
+  flex-shrink: 0;
+  color: #5bb3e6;
+}
+
+.brand-name {
+  font-size: var(--text-sm);
+  opacity: 0.8;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.site-title {
+  font-size: 1.375rem;
+  line-height: 1.2;
+}
+
+.site-footer {
+  padding: var(--space-4);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* 5. Progress indicator ---------------------------------------------------- */
+.progress__list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-2);
+}
+
+.progress__item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  position: relative;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* Connector line between the step circles */
+.progress__item:not(:first-child)::before {
+  content: "";
+  position: absolute;
+  top: 1rem;
+  right: calc(50% + 1.25rem);
+  width: calc(100% - 2.5rem + var(--space-2));
+  height: 2px;
+  background: var(--color-border);
+}
+
+.progress__num {
+  width: 2rem;
+  height: 2rem;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  border: 2px solid var(--color-border);
+  background: var(--color-surface);
+  font-weight: 700;
+}
+
+/* Completed steps (main.js adds .is-complete) */
+.progress__item.is-complete {
+  color: var(--color-text);
+}
+
+.progress__item.is-complete .progress__num {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.progress__item.is-complete::before {
+  background: var(--color-primary);
+}
+
+/* Current step */
+.progress__item[aria-current="step"] {
+  color: var(--color-text);
+  font-weight: 700;
+}
+
+.progress__item[aria-current="step"] .progress__num {
+  border-color: var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+/* 6. Steps and choice cards ------------------------------------------------ */
+.step {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.step__title {
+  font-size: var(--text-lg);
+}
+
+.step__title:focus {
+  outline: none; /* focused by script on step change, not by the user */
+}
+
+.step__intro {
+  color: var(--color-text-muted);
+}
+
+.choices__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
+  gap: var(--space-3);
+}
+
+/* Each choice is a <label> wrapping a real radio button, so clicking
+   anywhere on the card selects it and keyboard arrows still work. */
+.choice {
+  display: flex;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-4);
+  border: 2px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s;
+}
+
+.choice input {
+  margin: 0.2rem 0 0;
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+
+.choice:hover {
+  border-color: var(--color-primary);
+}
+
+.choice:has(input:checked) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-soft);
+}
+
+/* The radio itself is small, so show the focus ring on the whole card. */
+.choice:has(input:focus-visible) {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+.choice input:focus-visible {
+  outline: none;
+}
+
+.choice:has(input:disabled) {
+  cursor: not-allowed;
+  background: var(--color-surface-alt);
+  border-style: dashed;
+  border-color: var(--color-border);
+}
+
+.choice:has(input:disabled) .choice__title,
+.choice:has(input:disabled) .choice__meta,
+.choice:has(input:disabled) .choice__price {
+  opacity: 0.6;
+}
+
+.choice__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.choice__title {
+  font-weight: 700;
+}
+
+.choice__meta {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.choice__price {
+  font-weight: 600;
+  color: var(--color-primary);
+}
+
+/* Explains why a choice is disabled. Always visible (not hover-only),
+   so it also works on touch screens and is read by screen readers. */
+.choice__reason {
+  font-size: var(--text-sm);
+  color: var(--color-warning-text);
+}
+
+.choice__reason::before {
+  content: "⚠ ";
+}
+
+/* Option groups on step 3 */
+.option-groups {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.option-group legend {
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+/* 7. Buttons --------------------------------------------------------------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.75rem; /* comfortable touch target */
+  padding: var(--space-2) var(--space-5);
+  border: 2px solid transparent;
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+
+.btn--primary {
+  background: var(--color-primary);
+  color: var(--color-on-primary);
+}
+
+.btn--primary:hover {
+  background: var(--color-primary-strong);
+}
+
+.btn--secondary {
+  background: var(--color-surface);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn--secondary:hover {
+  background: var(--color-primary-soft);
+}
+
+.btn--ghost {
+  background: transparent;
+  color: var(--color-text-muted);
+}
+
+.btn--ghost:hover {
+  color: var(--color-text);
+  text-decoration: underline;
+}
+
+.step-nav {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--color-border);
+}
+
+/* Keeps Next on the right even when Back is hidden. */
+.step-nav #btn-next {
+  margin-left: auto;
+}
+
+.quote-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* 8. Notices and errors ---------------------------------------------------- */
+.notice {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-warning-border);
+  border-left-width: 4px;
+  border-radius: var(--radius-sm);
+  background: var(--color-warning-soft);
+  color: var(--color-warning-text);
+}
+
+/* The live region stays in the DOM (needed for announcements) but takes
+   no space while it has no message. */
+.notice:empty {
+  display: none;
+}
+
+.field-error {
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.field-error:not(:empty) {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-soft);
+}
+
+.field-error:not(:empty)::before {
+  content: "✕ ";
+}
+
+/* 9. Summary panel and review list ----------------------------------------- */
+.summary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.summary__title {
+  font-size: var(--text-lg);
+}
+
+.summary__total {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-primary-soft);
+}
+
+.summary__total-label {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.summary__total-value {
+  font-size: 2rem;
+  font-weight: 800;
+  line-height: 1.2;
+  color: var(--color-primary);
+  font-variant-numeric: tabular-nums; /* digits don't jump as the price changes */
+}
+
+.summary__figures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+.figure {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+
+.figure--wide {
+  grid-column: 1 / -1;
+}
+
+.figure dt {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.figure dd {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.summary__subtitle {
+  font-size: 1rem;
+}
+
+.summary__items {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.summary__items li {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+  font-size: var(--text-sm);
+}
+
+.summary__items li:last-child {
+  border-bottom: 0;
+}
+
+.summary__empty {
+  color: var(--color-text-muted);
+}
+
+.summary__note {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.summary__note:empty {
+  display: none;
+}
+
+.review-list {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.review-list dt,
+.review-list dd {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.review-list dt {
+  background: var(--color-surface-alt);
+  font-weight: 600;
+}
+
+.review-list > :nth-last-child(-n + 2) {
+  border-bottom: 0;
+}
+
+/* 10. Utilities ------------------------------------------------------------ */
+/* Hidden visually but still read by screen readers. */
+.visually-hidden {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.skip-link {
+  position: absolute;
+  top: var(--space-2);
+  left: var(--space-2);
+  z-index: 10;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  font-weight: 700;
+  transform: translateY(-200%);
+}
+
+.skip-link:focus {
+  transform: none;
+}
+
+.noscript {
+  margin: var(--space-4);
+  padding: var(--space-4);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  text-align: center;
+}
+
+/* Small phones: show only the current step's label to save room. */
+@media (max-width: 26rem) {
+  .progress__item:not([aria-current="step"]) .progress__label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
+
+/* Respect users who ask for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Configure a NordWave Power marine generator set: engine, fuel and options, with live price, weight and CO2 estimate.">
+  <title>GenSet Configurator | NordWave Power</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to configurator</a>
+
+  <header class="site-header">
+    <div class="site-header__inner">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <path d="M2 20c4 0 4-4 8-4s4 4 8 4 4-4 8-4 4 4 4 4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/>
+        <path d="M2 27c4 0 4-4 8-4s4 4 8 4 4-4 8-4 4 4 4 4" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" opacity=".55"/>
+        <path d="M17 3l-6 10h5l-2 6 7-10h-5l1-6z" fill="currentColor"/>
+      </svg>
+      <div>
+        <p class="brand-name">NordWave Power</p>
+        <h1 class="site-title">GenSet Configurator</h1>
+      </div>
+    </div>
+  </header>
+
+  <main id="main" class="layout">
+    <section class="configurator" aria-label="Configuration">
+
+      <!-- Progress indicator: main.js moves aria-current="step" as you navigate -->
+      <nav class="progress" aria-label="Configuration progress">
+        <ol class="progress__list">
+          <li class="progress__item" aria-current="step">
+            <span class="progress__num" aria-hidden="true">1</span>
+            <span class="progress__label">Engine</span>
+          </li>
+          <li class="progress__item">
+            <span class="progress__num" aria-hidden="true">2</span>
+            <span class="progress__label">Fuel</span>
+          </li>
+          <li class="progress__item">
+            <span class="progress__num" aria-hidden="true">3</span>
+            <span class="progress__label">Options</span>
+          </li>
+          <li class="progress__item">
+            <span class="progress__num" aria-hidden="true">4</span>
+            <span class="progress__label">Summary</span>
+          </li>
+        </ol>
+      </nav>
+
+      <!-- Non-blocking notices, e.g. "Heat exchanger was reset because..." -->
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+
+      <form id="config-form" class="card" novalidate>
+
+        <!-- STEP 1: ENGINE -->
+        <section class="step" id="step-engine" data-step="engine" aria-labelledby="step-engine-title">
+          <h2 class="step__title" id="step-engine-title" tabindex="-1">Choose an engine</h2>
+          <p class="step__intro">Pick the generator set that matches your vessel's power demand.</p>
+
+          <fieldset class="choices" aria-describedby="engine-error">
+            <legend class="visually-hidden">Engine model</legend>
+            <div class="choices__grid" id="engine-choices">
+              <!-- PLACEHOLDER MARKUP so the card styles can be reviewed.
+                   Stage 3 replaces this with cards rendered from products.json. -->
+              <label class="choice">
+                <input type="radio" name="engine" value="demo-a" checked>
+                <span class="choice__body">
+                  <span class="choice__title">Example engine A</span>
+                  <span class="choice__meta">500 kW · 6 cylinders · 4,100 kg</span>
+                  <span class="choice__price">€112,000</span>
+                </span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="engine" value="demo-b">
+                <span class="choice__body">
+                  <span class="choice__title">Example engine B</span>
+                  <span class="choice__meta">800 kW · 8 cylinders · 6,300 kg</span>
+                  <span class="choice__price">€168,000</span>
+                </span>
+              </label>
+              <label class="choice">
+                <input type="radio" name="engine" value="demo-c" disabled aria-describedby="demo-c-reason">
+                <span class="choice__body">
+                  <span class="choice__title">Example disabled option</span>
+                  <span class="choice__meta">Shows the disabled style</span>
+                  <span class="choice__reason" id="demo-c-reason">Not available with the selected fuel.</span>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+          <p class="field-error" id="engine-error"></p>
+        </section>
+
+        <!-- STEP 2: FUEL -->
+        <section class="step" id="step-fuel" data-step="fuel" aria-labelledby="step-fuel-title" hidden>
+          <h2 class="step__title" id="step-fuel-title" tabindex="-1">Choose a fuel</h2>
+          <p class="step__intro">Only fuels supported by your engine can be selected.</p>
+
+          <fieldset class="choices" aria-describedby="fuel-error">
+            <legend class="visually-hidden">Fuel type</legend>
+            <div class="choices__grid" id="fuel-choices"></div>
+          </fieldset>
+          <p class="field-error" id="fuel-error"></p>
+        </section>
+
+        <!-- STEP 3: OPTIONS (one fieldset per option group, rendered by ui.js) -->
+        <section class="step" id="step-options" data-step="options" aria-labelledby="step-options-title" hidden>
+          <h2 class="step__title" id="step-options-title" tabindex="-1">Choose options</h2>
+          <p class="step__intro">Options that don't fit your engine or fuel are disabled, with the reason shown.</p>
+
+          <div class="option-groups" id="option-groups"></div>
+          <p class="field-error" id="options-error"></p>
+        </section>
+
+        <!-- STEP 4: SUMMARY -->
+        <section class="step" id="step-summary" data-step="summary" aria-labelledby="step-summary-title" hidden>
+          <h2 class="step__title" id="step-summary-title" tabindex="-1">Review your quote</h2>
+          <p class="step__intro">Check your configuration, then download, print or share it.</p>
+
+          <dl class="review-list" id="review-list"></dl>
+
+          <div class="quote-actions">
+            <button type="button" class="btn btn--primary" id="btn-download">Download quote</button>
+            <button type="button" class="btn btn--secondary" id="btn-print">Print quote</button>
+            <button type="button" class="btn btn--secondary" id="btn-share">Copy shareable link</button>
+            <button type="button" class="btn btn--ghost" id="btn-reset">Start over</button>
+          </div>
+        </section>
+
+        <!-- Step navigation -->
+        <div class="step-nav">
+          <button type="button" class="btn btn--secondary" id="btn-back" hidden>Back</button>
+          <button type="button" class="btn btn--primary" id="btn-next">Next</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- LIVE SUMMARY (sticky on desktop) -->
+    <aside class="summary card" aria-labelledby="summary-title">
+      <h2 class="summary__title" id="summary-title">Your generator set</h2>
+
+      <!-- aria-live: screen readers announce the new total when it changes -->
+      <div class="summary__total" aria-live="polite" aria-atomic="true">
+        <span class="summary__total-label">Total price</span>
+        <span class="summary__total-value" id="sum-price">€0</span>
+      </div>
+
+      <dl class="summary__figures">
+        <div class="figure">
+          <dt>Power</dt>
+          <dd id="sum-power">–</dd>
+        </div>
+        <div class="figure">
+          <dt>Weight</dt>
+          <dd id="sum-weight">–</dd>
+        </div>
+        <div class="figure figure--wide">
+          <dt>Estimated CO<sub>2</sub> per year</dt>
+          <dd id="sum-co2">–</dd>
+        </div>
+      </dl>
+
+      <h3 class="summary__subtitle">Selected</h3>
+      <ul class="summary__items" id="summary-items">
+        <li class="summary__empty">Nothing selected yet.</li>
+      </ul>
+
+      <p class="summary__note" id="summary-note"></p>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <p id="disclaimer">NordWave Power is a fictional company. Prices and CO<sub>2</sub> figures are illustrative estimates.</p>
+  </footer>
+
+  <noscript>
+    <p class="noscript">This configurator needs JavaScript to load product data.</p>
+  </noscript>
+</body>
+</html>
