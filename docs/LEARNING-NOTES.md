@@ -73,3 +73,52 @@ On mobile there was a big empty gap between the form and the summary. The page i
 
 ### Tested
 Screenshots at 1280px (two columns, sticky summary), 375px and 320px (one column, no horizontal scroll).
+
+---
+
+## Stage 3: Loading the JSON, Engine and Fuel steps
+
+**Files:** `js/main.js`, `js/state.js`, `js/rules.js`, `js/ui.js` (+ small edits to `index.html` and `styles.css`)
+
+### How the four modules fit together
+```
+user clicks a radio
+   └─> main.js  (event listener)
+         └─> rules.js  applySelection()   pure: returns new selections + what was reset
+               └─> state.js  setSelections()   stores them, notifies subscribers
+                     └─> main.js render()
+                           └─> ui.js  updateChoices(), updateSteps()   touches the DOM
+```
+This is **one-way data flow**: the DOM never holds the truth, the state does. The UI is always redrawn *from* the state, so it can't drift out of sync. This is the same idea React and Redux are built on, done by hand.
+
+### main.js: wiring
+- `fetch("data/products.json")` inside `try/catch`. If it fails, the user gets a readable message instead of a blank page.
+- **Event delegation:** one `change` listener on the `<form>` handles every radio, including ones built later. `event.target.name` says which group, `.value` which item.
+- Next button: `validateStep()` first. If invalid, show the message and move focus to the first radio of the missing group.
+- `checkDataIntegrity()` runs on load and prints warnings for typos in the JSON.
+
+### state.js: a tiny store
+- `selections` is a flat object: `{ engine: "nw-m500", fuel: "lng" }`. Flat on purpose, because it maps directly to a URL query string (Stage 6) and to rule conditions (`selections[rule.if.group]`).
+- `getSelections()` returns a **copy**, so no other module can change state by accident.
+- `subscribe(listener)` is the **observer pattern**: main.js subscribes `render`, and every change triggers a redraw.
+
+### rules.js: pure functions
+- **Pure** = same input, same output, no side effects, no DOM. That's why it could be tested in Node before the browser was involved.
+- `getAvailability(data, selections)` → for every item: `{ available, reason }`. Stage 3 only uses engine → `supportedFuels`; Stage 4 adds the rules from the JSON.
+- `applySelection()` = add the new choice, then `sanitizeSelections()` removes anything now invalid and **returns what it removed**, so the UI can show "Fuel "LNG" was cleared: Not supported by the NW-M250 Compact."
+- Why one cleaning pass is enough: removing a choice can only *remove* restrictions, never add them.
+- `sanitizeSelections()` also handles **unknown ids**, so a tampered URL or old saved config with a deleted product is cleaned instead of crashing. Stage 6 relies on this.
+- `checkDataIntegrity()` finds rules or `supportedFuels` that point at ids that don't exist.
+
+### ui.js: rendering
+- **build vs update:** cards are *built* once after loading, then only *updated* (checked/disabled/reason text) on each change. If we rebuilt the HTML on every change, the focused radio would be destroyed and keyboard users would lose their place while pressing the arrow keys.
+- `el()` helper uses `textContent`, never `innerHTML`, so text from the JSON or a URL can't inject HTML/scripts (**XSS prevention**).
+- `Intl.NumberFormat` formats money (`€112,000`) using the currency from `meta.currency`, so no hard-coded symbols.
+- Accessibility: disabled radios get `aria-describedby` pointing at their reason text. After Next/Back, focus moves to the new step's heading (`tabindex="-1"`).
+
+### Bug found while testing
+Opening `index.html` straight from disk (`file://`) left the page stuck on "Loading engines…". Browsers **block ES modules on file:// URLs**, so `main.js` never ran and couldn't report its own error. Fix: a tiny classic inline `<script>` that detects `location.protocol === "file:"` and shows instructions to use Live Server.
+
+### Tested
+- Node: availability, reset when engine changes, validation messages, unknown-id cleaning, typo detection in JSON.
+- Browser (headless Edge driven by script): Next without choice shows an error and focuses the first radio; arrow keys change the choice and keep focus; M500 + LNG → back → M250 clears LNG with a notice; LNG then shows disabled with its reason; progress shows step 1 complete; no console errors; desktop and 375px layouts.

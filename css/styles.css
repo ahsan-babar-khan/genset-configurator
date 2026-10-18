@@ -389,6 +389,19 @@ fieldset {
   content: "⚠ ";
 }
 
+.choices__loading {
+  color: var(--color-text-muted);
+}
+
+.load-error {
+  grid-column: 1 / -1;
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: var(--color-danger-soft);
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
 /* Option groups on step 3 */
 .option-groups {
   display: flex;

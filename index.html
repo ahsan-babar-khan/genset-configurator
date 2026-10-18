@@ -6,6 +6,8 @@
   <meta name="description" content="Configure a NordWave Power marine generator set: engine, fuel and options, with live price, weight and CO2 estimate.">
   <title>GenSet Configurator | NordWave Power</title>
   <link rel="stylesheet" href="css/styles.css">
+  <!-- type="module" enables import/export and defers running until the HTML is parsed -->
+  <script type="module" src="js/main.js"></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to configurator</a>
@@ -61,33 +63,9 @@
 
           <fieldset class="choices" aria-describedby="engine-error">
             <legend class="visually-hidden">Engine model</legend>
+            <!-- Cards are built by ui.js from data/products.json -->
             <div class="choices__grid" id="engine-choices">
-              <!-- PLACEHOLDER MARKUP so the card styles can be reviewed.
-                   Stage 3 replaces this with cards rendered from products.json. -->
-              <label class="choice">
-                <input type="radio" name="engine" value="demo-a" checked>
-                <span class="choice__body">
-                  <span class="choice__title">Example engine A</span>
-                  <span class="choice__meta">500 kW · 6 cylinders · 4,100 kg</span>
-                  <span class="choice__price">€112,000</span>
-                </span>
-              </label>
-              <label class="choice">
-                <input type="radio" name="engine" value="demo-b">
-                <span class="choice__body">
-                  <span class="choice__title">Example engine B</span>
-                  <span class="choice__meta">800 kW · 8 cylinders · 6,300 kg</span>
-                  <span class="choice__price">€168,000</span>
-                </span>
-              </label>
-              <label class="choice">
-                <input type="radio" name="engine" value="demo-c" disabled aria-describedby="demo-c-reason">
-                <span class="choice__body">
-                  <span class="choice__title">Example disabled option</span>
-                  <span class="choice__meta">Shows the disabled style</span>
-                  <span class="choice__reason" id="demo-c-reason">Not available with the selected fuel.</span>
-                </span>
-              </label>
+              <p class="choices__loading">Loading engines…</p>
             </div>
           </fieldset>
           <p class="field-error" id="engine-error"></p>
@@ -174,6 +152,20 @@
   <footer class="site-footer">
     <p id="disclaimer">NordWave Power is a fictional company. Prices and CO<sub>2</sub> figures are illustrative estimates.</p>
   </footer>
+
+  <!-- Browsers block ES modules on file:// pages, so main.js can't run there
+       and can't show its own error. This classic script still runs. -->
+  <script>
+    if (location.protocol === "file:") {
+      var box = document.createElement("p");
+      box.className = "load-error";
+      box.setAttribute("role", "alert");
+      box.textContent = "This page must be served over HTTP. Open the folder in VS Code " +
+        "and use Live Server (or any local web server) instead of opening index.html directly.";
+      document.getElementById("engine-choices").replaceChildren(box);
+      document.getElementById("btn-next").disabled = true;
+    }
+  </script>
 
   <noscript>
     <p class="noscript">This configurator needs JavaScript to load product data.</p>
