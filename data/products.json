@@ -1,0 +1,165 @@
+{
+  "meta": {
+    "company": "NordWave Power",
+    "product": "Marine Generator Set",
+    "currency": "EUR",
+    "dataVersion": "1.0.0",
+    "disclaimer": "Fictional company and products. Prices and CO2 figures are illustrative estimates only."
+  },
+
+  "assumptions": {
+    "annualRunningHours": 4000,
+    "averageLoadFactor": 0.75,
+    "note": "CO2 estimate = power (kW) x load factor x running hours x fuel consumption (g/kWh) x CO2 factor (t CO2 per t fuel)."
+  },
+
+  "engines": [
+    {
+      "id": "nw-m250",
+      "name": "NW-M250 Compact",
+      "powerKw": 250,
+      "cylinders": 6,
+      "basePrice": 68000,
+      "weightKg": 2400,
+      "supportedFuels": ["mdo", "methanol"]
+    },
+    {
+      "id": "nw-m500",
+      "name": "NW-M500 Coastal",
+      "powerKw": 500,
+      "cylinders": 6,
+      "basePrice": 112000,
+      "weightKg": 4100,
+      "supportedFuels": ["mdo", "lng", "methanol"]
+    },
+    {
+      "id": "nw-m800",
+      "name": "NW-M800 Offshore",
+      "powerKw": 800,
+      "cylinders": 8,
+      "basePrice": 168000,
+      "weightKg": 6300,
+      "supportedFuels": ["mdo", "lng", "methanol"]
+    },
+    {
+      "id": "nw-m1200",
+      "name": "NW-M1200 Ocean",
+      "powerKw": 1200,
+      "cylinders": 12,
+      "basePrice": 245000,
+      "weightKg": 9800,
+      "supportedFuels": ["mdo", "lng"]
+    }
+  ],
+
+  "fuels": [
+    {
+      "id": "mdo",
+      "label": "Diesel (MDO)",
+      "description": "Marine diesel oil. Proven and simple, highest CO2 per kWh.",
+      "price": 0,
+      "weightKg": 0,
+      "fuelConsumptionGPerKwh": 205,
+      "co2FactorTPerTFuel": 3.206
+    },
+    {
+      "id": "lng",
+      "label": "LNG",
+      "description": "Liquefied natural gas. Lower CO2, needs a gas supply kit.",
+      "price": 22000,
+      "weightKg": 450,
+      "fuelConsumptionGPerKwh": 160,
+      "co2FactorTPerTFuel": 2.75
+    },
+    {
+      "id": "methanol",
+      "label": "Methanol",
+      "description": "Liquid alternative fuel. Needs advanced monitoring for safety.",
+      "price": 16000,
+      "weightKg": 300,
+      "fuelConsumptionGPerKwh": 420,
+      "co2FactorTPerTFuel": 1.375
+    }
+  ],
+
+  "optionGroups": [
+    {
+      "id": "cooling",
+      "label": "Cooling",
+      "required": true,
+      "options": [
+        { "id": "radiator", "label": "Radiator", "price": 0, "weightKg": 180 },
+        { "id": "heat-exchanger", "label": "Heat exchanger (seawater)", "price": 7500, "weightKg": 120 }
+      ]
+    },
+    {
+      "id": "control",
+      "label": "Control system",
+      "required": true,
+      "options": [
+        { "id": "basic", "label": "Basic local panel", "price": 0 },
+        { "id": "advanced", "label": "Advanced remote monitoring", "price": 9800, "weightKg": 15 }
+      ]
+    },
+    {
+      "id": "aftertreatment",
+      "label": "Exhaust aftertreatment",
+      "required": true,
+      "options": [
+        { "id": "none", "label": "None", "price": 0 },
+        { "id": "scr", "label": "SCR (NOx reduction)", "price": 18500, "weightKg": 650 }
+      ]
+    },
+    {
+      "id": "enclosure",
+      "label": "Noise enclosure",
+      "required": true,
+      "options": [
+        { "id": "no", "label": "No enclosure", "price": 0 },
+        { "id": "yes", "label": "Acoustic enclosure", "price": 12000 }
+      ]
+    },
+    {
+      "id": "warranty",
+      "label": "Warranty",
+      "required": true,
+      "options": [
+        { "id": "2y", "label": "2 years (standard)", "price": 0 },
+        { "id": "5y", "label": "5 years (extended)", "price": 8900 }
+      ]
+    }
+  ],
+
+  "rules": [
+    {
+      "id": "methanol-needs-advanced-control",
+      "type": "requires",
+      "if": { "group": "fuel", "value": "methanol" },
+      "then": { "group": "control", "value": "advanced" },
+      "message": "Methanol fuel requires the advanced control system."
+    },
+    {
+      "id": "no-scr-with-lng",
+      "type": "excludes",
+      "if": { "group": "fuel", "value": "lng" },
+      "then": { "group": "aftertreatment", "value": "scr" },
+      "message": "SCR aftertreatment is not available with LNG."
+    },
+    {
+      "id": "m250-no-heat-exchanger",
+      "type": "excludes",
+      "if": { "group": "engine", "value": "nw-m250" },
+      "then": { "group": "cooling", "value": "heat-exchanger" },
+      "message": "The NW-M250 is too small for the heat exchanger."
+    }
+  ],
+
+  "modifiers": [
+    {
+      "id": "enclosure-weight",
+      "when": { "group": "enclosure", "value": "yes" },
+      "effect": { "type": "weightPercent", "value": 8 },
+      "label": "Noise enclosure adds 8% to total weight"
+    }
+  ]
+}
