@@ -150,6 +150,11 @@ fieldset {
   }
 }
 
+/* Focused only by the skip link; the ring around the whole page would be noise. */
+.layout:focus {
+  outline: none;
+}
+
 .configurator {
   display: flex;
   flex-direction: column;
@@ -252,7 +257,7 @@ fieldset {
   font-weight: 700;
 }
 
-/* Completed steps (main.js adds .is-complete) */
+/* Completed steps (ui.js adds .is-complete) */
 .progress__item.is-complete {
   color: var(--color-text);
 }

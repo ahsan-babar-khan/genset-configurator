@@ -160,6 +160,8 @@ export function updateSteps(stepIndex) {
 
   document.querySelectorAll(".progress__item").forEach((item, i) => {
     item.classList.toggle("is-complete", i < stepIndex);
+    // Colour alone shows "done" on screen; screen readers need words.
+    setText(item.querySelector(".progress__status"), i < stepIndex ? " (completed)" : "");
     if (i === stepIndex) item.setAttribute("aria-current", "step");
     else item.removeAttribute("aria-current");
   });

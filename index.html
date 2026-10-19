@@ -27,7 +27,8 @@
     </div>
   </header>
 
-  <main id="main" class="layout">
+  <!-- tabindex="-1" lets the skip link move focus here in every browser -->
+  <main id="main" class="layout" tabindex="-1">
     <section class="configurator" aria-label="Configuration">
 
       <!-- Progress indicator: main.js moves aria-current="step" as you navigate -->
@@ -35,19 +36,19 @@
         <ol class="progress__list">
           <li class="progress__item" aria-current="step">
             <span class="progress__num" aria-hidden="true">1</span>
-            <span class="progress__label">Engine</span>
+            <span class="progress__label">Engine</span><span class="progress__status visually-hidden"></span>
           </li>
           <li class="progress__item">
             <span class="progress__num" aria-hidden="true">2</span>
-            <span class="progress__label">Fuel</span>
+            <span class="progress__label">Fuel</span><span class="progress__status visually-hidden"></span>
           </li>
           <li class="progress__item">
             <span class="progress__num" aria-hidden="true">3</span>
-            <span class="progress__label">Options</span>
+            <span class="progress__label">Options</span><span class="progress__status visually-hidden"></span>
           </li>
           <li class="progress__item">
             <span class="progress__num" aria-hidden="true">4</span>
-            <span class="progress__label">Summary</span>
+            <span class="progress__label">Summary</span><span class="progress__status visually-hidden"></span>
           </li>
         </ol>
       </nav>
