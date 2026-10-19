@@ -1,0 +1,13 @@
+{
+  "name": "genset-configurator",
+  "version": "1.0.0",
+  "description": "Marine generator set configurator in plain HTML, CSS and JavaScript.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
