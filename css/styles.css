@@ -668,7 +668,17 @@ fieldset {
   color: var(--color-primary);
 }
 
+.review-note {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
 /* 10. Utilities ------------------------------------------------------------ */
+/* Content only meant for the printed quote (print.css shows it). */
+.print-only {
+  display: none;
+}
+
 /* Hidden visually but still read by screen readers. */
 .visually-hidden {
   position: absolute !important;

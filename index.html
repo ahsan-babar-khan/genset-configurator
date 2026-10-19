@@ -6,6 +6,7 @@
   <meta name="description" content="Configure a NordWave Power marine generator set: engine, fuel and options, with live price, weight and CO2 estimate.">
   <title>GenSet Configurator | NordWave Power</title>
   <link rel="stylesheet" href="css/styles.css">
+  <link rel="stylesheet" href="css/print.css" media="print">
   <!-- type="module" enables import/export and defers running until the HTML is parsed -->
   <script type="module" src="js/main.js"></script>
 </head>
@@ -94,10 +95,18 @@
 
         <!-- STEP 4: SUMMARY -->
         <section class="step" id="step-summary" data-step="summary" aria-labelledby="step-summary-title" hidden>
+          <!-- Only shown on paper (see print.css) -->
+          <div class="print-only print-header">
+            <p class="print-header__company" id="print-company"></p>
+            <p>Generator set quote · <span id="print-date"></span></p>
+          </div>
+
           <h2 class="step__title" id="step-summary-title" tabindex="-1">Review your quote</h2>
           <p class="step__intro">Check your configuration, then download, print or share it.</p>
 
           <dl class="review-list" id="review-list"></dl>
+          <p class="review-note" id="review-note"></p>
+          <p class="print-only print-link">Reopen this configuration online: <span id="print-link"></span></p>
 
           <div class="quote-actions">
             <button type="button" class="btn btn--primary" id="btn-download">Download quote</button>

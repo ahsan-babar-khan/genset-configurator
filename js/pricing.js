@@ -2,12 +2,7 @@
 // Pure functions only (no DOM), so they can be tested in Node.
 // Every number comes from products.json; nothing is hard-coded here.
 
-import { findItem, getGroupLabel, getItemLabel } from "./rules.js";
-
-// The order lines appear in on the summary and the quote.
-function groupOrder(data) {
-  return ["engine", "fuel", ...data.optionGroups.map((g) => g.id)];
-}
+import { findItem, getAllGroups, getGroupLabel, getItemLabel } from "./rules.js";
 
 // g of CO2 per kWh produced, for one fuel.
 // (fuel used per kWh) x (CO2 released per tonne of fuel burnt)
@@ -40,7 +35,7 @@ export function weightAdjustments(data, selections, baseWeightKg) {
 export function calculateTotals(data, selections) {
   const lines = [];
 
-  for (const group of groupOrder(data)) {
+  for (const group of getAllGroups(data)) {
     const item = findItem(data, group, selections[group]);
     if (!item) continue;
     lines.push({
@@ -70,5 +65,32 @@ export function calculateTotals(data, selections) {
     adjustments,
     weightKg: engine ? weightKg : null, // no meaningful weight without an engine
     co2TonnesPerYear: engine && fuel ? Math.round(annualCo2Tonnes(engine, fuel, data.assumptions)) : null,
+  };
+}
+
+// The downloadable quote. Pure: the date and share link are passed in,
+// so the same inputs always give the same quote (easy to test).
+export function buildQuote(data, selections, { date, shareUrl }) {
+  const totals = calculateTotals(data, selections);
+  return {
+    company: data.meta.company,
+    product: data.meta.product,
+    createdAt: date.toISOString(),
+    dataVersion: data.meta.dataVersion,
+    currency: totals.currency,
+    configuration: totals.lines,
+    weightAdjustments: totals.adjustments,
+    totals: {
+      price: totals.price,
+      powerKw: totals.powerKw,
+      weightKg: totals.weightKg,
+      co2TonnesPerYear: totals.co2TonnesPerYear,
+    },
+    assumptions: {
+      annualRunningHours: data.assumptions.annualRunningHours,
+      averageLoadFactor: data.assumptions.averageLoadFactor,
+    },
+    shareUrl,
+    disclaimer: data.meta.disclaimer,
   };
 }

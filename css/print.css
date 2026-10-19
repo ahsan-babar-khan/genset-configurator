@@ -1,0 +1,115 @@
+/* ==========================================================================
+   GenSet Configurator - print styles
+   Loaded with media="print", so it only applies to Print / Save as PDF.
+   Goal: a clean one-page quote. Black on white, no navigation or buttons,
+   and always the summary table, even if Ctrl+P is pressed on another step.
+   ========================================================================== */
+
+@page {
+  margin: 18mm 15mm;
+}
+
+/* Paper is white: force light colours even if the screen is in dark mode. */
+:root {
+  --color-bg: #fff;
+  --color-surface: #fff;
+  --color-surface-alt: #f2f2f2;
+  --color-text: #000;
+  --color-text-muted: #444;
+  --color-border: #999;
+  --color-primary: #000;
+  --color-primary-soft: #eaeaea;
+}
+
+body {
+  background: #fff;
+  color: #000;
+  font-size: 11pt;
+}
+
+/* Hide everything that only makes sense on screen. */
+.skip-link,
+.site-header,
+.progress,
+.notice,
+.step-nav,
+.quote-actions,
+.summary,
+.step__intro,
+noscript {
+  display: none !important;
+}
+
+/* Show only the summary step, whatever step is open on screen.
+   The id selector beats the generic [hidden] rule in styles.css. */
+.step {
+  display: none !important;
+}
+
+#step-summary,
+#step-summary[hidden] {
+  display: block !important;
+}
+
+.print-only {
+  display: block;
+}
+
+.layout {
+  display: block;
+  max-width: none;
+  padding: 0;
+}
+
+.card {
+  border: 0;
+  box-shadow: none;
+  padding: 0;
+}
+
+.print-header {
+  margin-bottom: 8mm;
+  padding-bottom: 4mm;
+  border-bottom: 2px solid #000;
+}
+
+.print-header__company {
+  font-size: 18pt;
+  font-weight: 800;
+}
+
+.step__title {
+  margin-bottom: 4mm;
+}
+
+/* The quote table */
+.review-list {
+  border-color: #000;
+}
+
+.review-list dt,
+.review-list dd {
+  padding: 2.5mm 3mm;
+}
+
+/* Never split a row across two pages. */
+.review-list dt,
+.review-list dd {
+  break-inside: avoid;
+}
+
+.review-note,
+.print-link {
+  margin-top: 4mm;
+  font-size: 9pt;
+}
+
+.print-link span {
+  word-break: break-all; /* long URLs wrap instead of running off the page */
+}
+
+.site-footer {
+  margin-top: 8mm;
+  text-align: left;
+  font-size: 8pt;
+}

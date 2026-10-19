@@ -204,3 +204,43 @@ On phones the summary panel is below the form, so you have to scroll to see the 
 ### Tested
 - Node: totals for a full configuration match the hand calculation; empty and partial configs return `null` where appropriate.
 - Browser: price, power, weight and CO2 update on every click; switching engine to M250 clears fuel and cooling *and* the totals drop to match (€98,700); review table correct; no console errors; desktop and mobile screenshots.
+
+---
+
+## Stage 6: Save/load, shareable link, export, print
+
+**Files:** `js/state.js`, `js/main.js`, `js/ui.js`, `js/pricing.js`, `js/rules.js`, `css/print.css` (new), `index.html`, `css/styles.css`
+
+### Save / load (localStorage), in state.js
+- `saveConfiguration()` stores `{ selections, dataVersion, savedAt }` as JSON under the key `genset-configurator:v1`. The `v1` in the key means a future incompatible format can use `v2` without misreading old data.
+- **Everything is wrapped in `try/catch`.** localStorage can throw when disabled, full, or blocked in private browsing, and stored text can be corrupted (`JSON.parse` throws). Saving is a convenience, so on failure we log a warning and carry on. Tested by writing `{not json` into storage: the app just starts fresh.
+- `loadConfiguration()` also checks the *shape* (an object of strings), not just that it parses.
+- main.js subscribes `persist()` to the state, so it saves after every change automatically. No "Save" button to forget.
+
+### Shareable link (URL query string)
+- `selectionsToQuery()` → `?engine=nw-m500&fuel=lng&...` using `URLSearchParams` (handles encoding). Groups are written in a fixed order, so the same configuration always gives the same link.
+- `selectionsFromQuery()` reads only known group names and ignores everything else (e.g. `utm_source`).
+- **The URL is never trusted.** Anyone can edit a link, so values go through the same `sanitizeSelections()` used for rule resets: unknown ids and invalid combinations are removed, and the notice says what was dropped. Tested with `control=<img src=x onerror=alert(1)>`: it is shown as plain text (because ui.js uses `textContent`), and nothing runs.
+- `history.replaceState()` keeps the address bar in sync with the configuration on every change. `replaceState` (not `pushState`) means clicking options doesn't fill up the Back button history.
+- **Priority on load:** shared link > saved configuration > empty. The app opens at the first incomplete step, or at the Summary if everything is chosen.
+- "Copy shareable link" uses `navigator.clipboard.writeText()`. It only works on https/localhost and can be refused, so if it fails the link is shown in the notice to copy by hand.
+
+### Export: Download quote
+- `buildQuote()` in pricing.js is **pure**: the date and share URL are passed *in*, so tests get the same output every time. The quote contains company, date, data version, every line with price and weight, weight adjustments, totals, assumptions, the share link and the disclaimer.
+- `ui.downloadFile()` puts the JSON in a `Blob`, makes a temporary `blob:` URL, clicks a hidden `<a download>`, then revokes the URL after a second to free memory (revoking immediately can cancel the download in some browsers).
+- **Bug found:** the file name used `toISOString().slice(0,10)`, which is the **UTC** date. During testing at 02:39 local time (UTC+3) the file was named after the *previous* day. Fixed with `localDateStamp()` using `getFullYear/getMonth/getDate`. (The `createdAt` inside the file stays ISO/UTC on purpose; that's the standard for machine-readable timestamps.)
+
+### Print quote (print.css)
+- Linked with `media="print"`, so the browser ignores it on screen.
+- Hides header, progress bar, buttons, notices and the side panel; shows only the summary step, **even if Ctrl+P is pressed on another step**. Specificity trick: `#step-summary[hidden] { display: block !important }` beats the generic `[hidden] { display: none !important }` because an id selector outranks an attribute selector.
+- Forces light colours by redefining the same custom properties, so dark-mode users still get black on white. Design tokens pay off again.
+- `.print-only` elements (company header, date, "Reopen this configuration online: <link>") are hidden on screen and shown on paper.
+- The date is set in a `beforeprint` event, so it is correct for the button *and* for Ctrl+P.
+- `break-inside: avoid` keeps table rows from splitting across pages; long URLs wrap with `word-break: break-all`.
+
+### Start over
+`confirm()` first (it's destructive), then clear storage, reset state, clean the URL, and focus step 1.
+
+### Tested
+- Node: query round trip; tampered query cleaned; quote totals; missing localStorage returns `null` instead of crashing.
+- Browser: URL and storage update while choosing; reload restores and opens the right step; full link opens Summary with €172,200; tampered link cleaned and not executed; corrupted storage ignored; copy link (success and fallback); download produces correct JSON with local-date filename; print button calls print; reset clears URL and storage; print layout screenshot with dark mode on; no console errors.

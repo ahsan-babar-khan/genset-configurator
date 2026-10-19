@@ -15,6 +15,11 @@ const AVAILABLE = Object.freeze({ available: true, reason: "" });
 // Lookups
 // ---------------------------------------------------------------------------
 
+// Every selection group, in display order: engine, fuel, then option groups.
+export function getAllGroups(data) {
+  return ["engine", "fuel", ...data.optionGroups.map((g) => g.id)];
+}
+
 // All selectable items of a group, whatever kind of group it is.
 export function getGroupItems(data, group) {
   if (group === "engine") return data.engines;

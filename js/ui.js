@@ -238,11 +238,53 @@ export function updateReview(totals, fmt) {
   $("#review-list").replaceChildren(...rows);
 }
 
-// Explains the assumptions behind the CO2 figure, from products.json.
-export function setAssumptionsNote(assumptions, fmt) {
-  $("#summary-note").textContent =
-    `CO2 estimate assumes ${fmt.number(assumptions.annualRunningHours)} running hours per year ` +
-    `at ${Math.round(assumptions.averageLoadFactor * 100)}% average load.`;
+// Text that comes from products.json but never changes while the page is open.
+export function setStaticText(data, fmt) {
+  const { annualRunningHours, averageLoadFactor } = data.assumptions;
+  const note =
+    `CO2 estimate assumes ${fmt.number(annualRunningHours)} running hours per year ` +
+    `at ${Math.round(averageLoadFactor * 100)}% average load.`;
+
+  $("#summary-note").textContent = note;
+  $("#review-note").textContent = note;
+  $("#disclaimer").textContent = data.meta.disclaimer;
+  $("#print-company").textContent = data.meta.company;
+}
+
+// ---------------------------------------------------------------------------
+// Export, share and print
+// ---------------------------------------------------------------------------
+
+// Creates a file in memory (Blob) and clicks a temporary download link.
+export function downloadFile(filename, text, type) {
+  const url = URL.createObjectURL(new Blob([text], { type }));
+  const link = el("a", { href: url, download: filename });
+  document.body.append(link);
+  link.click();
+  link.remove();
+  // Free the memory once the browser has started the download. Revoking
+  // immediately can cancel it in some browsers.
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// The Clipboard API only works on https or localhost and can be refused by
+// the user, so failure is expected and handled by the caller.
+export async function copyToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch (error) {
+    console.warn("Clipboard not available:", error);
+    return false;
+  }
+}
+
+export function setPrintLink(url) {
+  setText($("#print-link"), url);
+}
+
+export function setPrintDate(date) {
+  $("#print-date").textContent = date.toLocaleDateString("en-IE", { dateStyle: "long" });
 }
 
 // ---------------------------------------------------------------------------
@@ -291,8 +333,4 @@ export function showLoadError(message) {
   const box = el("p", { class: "load-error", role: "alert", text: message });
   $("#engine-choices").replaceChildren(box);
   $("#btn-next").disabled = true;
-}
-
-export function setDisclaimer(text) {
-  $("#disclaimer").textContent = text;
 }
