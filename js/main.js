@@ -43,6 +43,7 @@ async function init() {
 
   ui.buildEngineChoices(document.getElementById("engine-choices"), data, fmt);
   ui.buildFuelChoices(document.getElementById("fuel-choices"), data, fmt);
+  ui.buildOptionGroups(document.getElementById("option-groups"), data, fmt);
   ui.setDisclaimer(data.meta.disclaimer);
 
   // Re-render from state on every change.
@@ -62,7 +63,10 @@ async function init() {
     const { selections, resets } = applySelection(data, state.getSelections(), input.name, input.value);
     state.setSelections(selections);
 
+    // Clear the error message, but keep highlighting groups that are still empty.
+    const stillMissing = ui.hasMissingGroups();
     ui.clearStepErrors();
+    if (stillMissing) ui.markMissingGroups(validateStep(data, selections, "options").missing);
     if (resets.length > 0) ui.showNotice(resets.map((r) => describeReset(data, r)));
     else ui.clearNotice();
   });
@@ -80,6 +84,7 @@ async function init() {
 
     if (!result.valid) {
       ui.showStepError(STEPS[step], result.message);
+      ui.markMissingGroups(result.missing);
       ui.focusGroup(form, result.missing[0]);
       return;
     }

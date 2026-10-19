@@ -74,7 +74,44 @@ export function getAvailability(data, selections) {
     availability[group.id] = Object.fromEntries(group.options.map((o) => [o.id, AVAILABLE]));
   }
 
+  applyRules(data, selections, availability);
   return availability;
+}
+
+// The rule engine. Walks the "rules" list from products.json and disables
+// items in the availability map. There is no product-specific code here:
+// a new rule in the JSON works without touching this function.
+//
+//   excludes: if X is selected, the "then" item is disabled
+//   requires: if X is selected, every OTHER item in the "then" group is disabled
+function applyRules(data, selections, availability) {
+  for (const rule of data.rules ?? []) {
+    if (selections[rule.if.group] !== rule.if.value) continue; // rule not triggered
+
+    const targetGroup = availability[rule.then.group];
+    if (!targetGroup) continue;
+
+    let blockedIds;
+    if (rule.type === "excludes") {
+      blockedIds = [rule.then.value];
+    } else if (rule.type === "requires") {
+      blockedIds = Object.keys(targetGroup).filter((id) => id !== rule.then.value);
+    } else {
+      continue; // unknown type: reported by checkDataIntegrity()
+    }
+
+    for (const id of blockedIds) {
+      if (targetGroup[id]) targetGroup[id] = disable(targetGroup[id], rule.message);
+    }
+  }
+}
+
+// Marks an item unavailable. If several rules block the same item, all
+// their reasons are kept.
+function disable(status, reason) {
+  if (status.available) return { available: false, reason };
+  if (status.reason.includes(reason)) return status;
+  return { available: false, reason: `${status.reason} ${reason}` };
 }
 
 // Selections that are no longer allowed (or no longer exist in the data).
@@ -154,6 +191,9 @@ export function checkDataIntegrity(data) {
     }
   }
   for (const rule of data.rules ?? []) {
+    if (!["excludes", "requires"].includes(rule.type)) {
+      problems.push(`Rule "${rule.id}" has unknown type "${rule.type}".`);
+    }
     for (const cond of [rule.if, rule.then]) {
       if (!exists(cond.group, cond.value)) {
         problems.push(`Rule "${rule.id}" refers to unknown ${cond.group} "${cond.value}".`);

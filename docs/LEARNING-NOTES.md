@@ -122,3 +122,41 @@ Opening `index.html` straight from disk (`file://`) left the page stuck on "Load
 ### Tested
 - Node: availability, reset when engine changes, validation messages, unknown-id cleaning, typo detection in JSON.
 - Browser (headless Edge driven by script): Next without choice shows an error and focuses the first radio; arrow keys change the choice and keep focus; M500 + LNG → back → M250 clears LNG with a notice; LNG then shows disabled with its reason; progress shows step 1 complete; no console errors; desktop and 375px layouts.
+
+---
+
+## Stage 4: Options step and rule engine
+
+**Files:** `js/rules.js` (rule engine), `js/ui.js` (option groups), `js/main.js`, `css/styles.css`
+
+### The rule engine (`applyRules` in rules.js)
+After every change, `getAvailability()` starts with "everything available", then walks the `rules` list from products.json:
+```
+for each rule:
+  is rule.if.value currently selected in rule.if.group?  no -> skip
+  excludes -> disable the one item rule.then.value
+  requires -> disable every OTHER item in rule.then.group
+  use rule.message as the reason
+```
+- **No product names in the code.** "Methanol", "LNG" and "SCR" appear only in the JSON. To add a rule, a product manager adds an object to `rules`, and it works with no code change. This was tested by adding a new "NW-M1200 needs 5-year warranty" rule in a test only.
+- If two rules block the same item, both reasons are kept (`disable()` joins them).
+- `checkDataIntegrity()` now also reports unknown rule types (e.g. a typo like `"forbids"`).
+
+### Why availability is recalculated from scratch every time
+Instead of "when fuel changes, re-enable SCR", the whole map is rebuilt from the current selections. You never have to undo a rule; you just stop applying it. This removes a whole class of bugs where something stays disabled after the cause is gone. With ~20 items it costs microseconds.
+
+### Auto-reset with a notice (feature 3)
+Same mechanism as Stage 3, now covering rules too: `applySelection()` → `sanitizeSelections()` removes any selection the rules now block and returns it, and main.js shows it in the `aria-live` notice. Example: M500 + SCR, then go back and pick LNG → *Exhaust aftertreatment "SCR (NOx reduction)" was cleared: SCR aftertreatment is not available with LNG.*
+Changing engine can clear several groups at once (fuel *and* cooling), and the notice lists them all.
+
+### Options step (`buildOptionGroups` in ui.js)
+- One `<fieldset>` + `<legend>` per option group in the JSON. A screen reader announces "Cooling, radio group". The radios in each group share `name="cooling"`, so arrow keys stay within a group.
+- Weight lines (`+650 kg`) come from `weightKg`; the "+8% total weight" line comes from the `modifiers` list, so it is data-driven too.
+- The same `buildChoice()` and `updateChoices()` from Stage 3 are reused. Nothing new was needed to make disabling/reasons work for options.
+
+### Validation UX improvement
+The error message sits below five groups, too far away on a phone. So groups still missing a choice get `.is-missing`: a red legend with "- required" and red card borders. Picking an option removes the highlight from that group only; the others stay highlighted until filled.
+
+### Tested
+- Node: M250 + methanol disables heat exchanger and basic control (the case traced by hand in Stage 1); methanol resets basic control; LNG resets SCR; switching to M250 resets both fuel and cooling; new JSON-only rule works; unknown rule type is reported.
+- Browser: disabled options with correct reasons; Next with empty groups shows the error, highlights the right groups, focuses the first one; highlights clear one by one; reaching Summary; no console errors; mobile layout.

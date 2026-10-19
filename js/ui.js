@@ -98,6 +98,37 @@ export function buildFuelChoices(container, data, fmt) {
   );
 }
 
+// One <fieldset> per option group, each with its own radio cards.
+// Weight changes and modifiers (e.g. "+8% total weight") come from the JSON.
+export function buildOptionGroups(container, data, fmt) {
+  const modifierLines = (groupId, optionId) =>
+    (data.modifiers ?? [])
+      .filter((m) => m.when.group === groupId && m.when.value === optionId)
+      .map((m) => m.label);
+
+  container.replaceChildren(
+    ...data.optionGroups.map((group) => {
+      const cards = group.options.map((option) =>
+        buildChoice({
+          name: group.id,
+          id: option.id,
+          title: option.label,
+          lines: [
+            ...(option.weightKg ? [`+${fmt.number(option.weightKg)} kg`] : []),
+            ...modifierLines(group.id, option.id),
+          ],
+          price: fmt.extra(option.price),
+        })
+      );
+
+      return el("fieldset", { class: "option-group", "data-group": group.id, "aria-describedby": "options-error" }, [
+        el("legend", { text: group.label }),
+        el("div", { class: "choices__grid" }, cards),
+      ]);
+    })
+  );
+}
+
 // Syncs every radio in the form with the state: checked, disabled, and the
 // "why disabled" text, which is linked to the input with aria-describedby.
 export function updateChoices(form, selections, availability) {
@@ -157,6 +188,19 @@ export function clearStepErrors() {
     const box = $(`#${step}-error`);
     if (box) box.textContent = "";
   }
+  markMissingGroups([]);
+}
+
+// Highlights the option groups that still need a choice, so the user can
+// see them without scrolling down to the error message.
+export function markMissingGroups(groups) {
+  for (const fieldset of document.querySelectorAll(".option-group")) {
+    fieldset.classList.toggle("is-missing", groups.includes(fieldset.dataset.group));
+  }
+}
+
+export function hasMissingGroups() {
+  return document.querySelector(".option-group.is-missing") !== null;
 }
 
 // Puts focus on the first selectable radio of a group, used after a

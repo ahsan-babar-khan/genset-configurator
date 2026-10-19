@@ -414,6 +414,20 @@ fieldset {
   margin-bottom: var(--space-2);
 }
 
+/* Group that still needs a choice after pressing Next (main.js adds it) */
+.option-group.is-missing legend {
+  color: var(--color-danger);
+}
+
+.option-group.is-missing legend::after {
+  content: " - required";
+  font-weight: 400;
+}
+
+.option-group.is-missing .choice:not(:has(input:disabled)) {
+  border-color: var(--color-danger);
+}
+
 /* 7. Buttons --------------------------------------------------------------- */
 .btn {
   display: inline-flex;
