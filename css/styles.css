@@ -580,6 +580,17 @@ fieldset {
   font-variant-numeric: tabular-nums;
 }
 
+.figure dd.figure__detail {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.summary__item-price {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 .summary__subtitle {
   font-size: 1rem;
 }
@@ -635,8 +646,26 @@ fieldset {
   font-weight: 600;
 }
 
+.review-list dd {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.review-list__price {
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
 .review-list > :nth-last-child(-n + 2) {
   border-bottom: 0;
+}
+
+.review-list .review-list__total {
+  background: var(--color-primary-soft);
+  font-weight: 800;
+  font-size: var(--text-lg);
+  color: var(--color-primary);
 }
 
 /* 10. Utilities ------------------------------------------------------------ */

@@ -11,6 +11,7 @@ import {
   validateStep,
   checkDataIntegrity,
 } from "./rules.js";
+import { calculateTotals } from "./pricing.js";
 import * as ui from "./ui.js";
 
 const DATA_URL = "data/products.json";
@@ -45,12 +46,16 @@ async function init() {
   ui.buildFuelChoices(document.getElementById("fuel-choices"), data, fmt);
   ui.buildOptionGroups(document.getElementById("option-groups"), data, fmt);
   ui.setDisclaimer(data.meta.disclaimer);
+  ui.setAssumptionsNote(data.assumptions, fmt);
 
   // Re-render from state on every change.
   function render() {
     const selections = state.getSelections();
+    const totals = calculateTotals(data, selections);
     ui.updateChoices(form, selections, getAvailability(data, selections));
     ui.updateSteps(state.getStep());
+    ui.updateSummary(totals, fmt);
+    ui.updateReview(totals, fmt);
   }
 
   // --- Events -------------------------------------------------------------

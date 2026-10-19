@@ -6,6 +6,7 @@
 //           keyboard focus where it is while the user arrows through radios.
 
 import { STEPS } from "./rules.js";
+import { co2GramsPerKwh } from "./pricing.js";
 
 const $ = (selector, root = document) => root.querySelector(selector);
 
@@ -91,7 +92,7 @@ export function buildFuelChoices(container, data, fmt) {
         name: "fuel",
         id: fuel.id,
         title: fuel.label,
-        lines: [fuel.description],
+        lines: [fuel.description, `≈ ${fmt.number(co2GramsPerKwh(fuel))} g CO2 per kWh`],
         price: fmt.extra(fuel.price),
       })
     )
@@ -173,6 +174,75 @@ export function updateSteps(stepIndex) {
 // users start at the top of the step instead of on a now-hidden button.
 export function focusStepHeading(stepIndex) {
   $(`#step-${STEPS[stepIndex]}-title`)?.focus();
+}
+
+// ---------------------------------------------------------------------------
+// Live summary and review
+// ---------------------------------------------------------------------------
+
+// Only touch the DOM when the text really changes. Rewriting the same text
+// inside an aria-live region can make screen readers announce it again.
+function setText(node, text) {
+  if (node.textContent !== text) node.textContent = text;
+}
+
+const DASH = "–";
+
+export function updateSummary(totals, fmt) {
+  setText($("#sum-price"), fmt.money(totals.price));
+  setText($("#sum-power"), totals.powerKw === null ? DASH : `${fmt.number(totals.powerKw)} kW`);
+  setText($("#sum-weight"), totals.weightKg === null ? DASH : `${fmt.number(totals.weightKg)} kg`);
+  setText(
+    $("#sum-co2"),
+    totals.co2TonnesPerYear === null ? "Choose engine and fuel" : `≈ ${fmt.number(totals.co2TonnesPerYear)} t`
+  );
+
+  // e.g. "incl. +375 kg: Noise enclosure adds 8% to total weight"
+  const detail = $("#sum-weight-detail");
+  const adjustmentText = totals.adjustments
+    .map((a) => `incl. +${fmt.number(a.weightKg)} kg: ${a.label}`)
+    .join(" ");
+  setText(detail, totals.weightKg === null ? "" : adjustmentText);
+  detail.hidden = detail.textContent === "";
+
+  const items =
+    totals.lines.length === 0
+      ? [el("li", { class: "summary__empty", text: "Nothing selected yet." })]
+      : totals.lines.map((line) =>
+          el("li", {}, [
+            el("span", { text: `${line.groupLabel}: ${line.label}` }),
+            el("span", { class: "summary__item-price", text: fmt.money(line.price) }),
+          ])
+        );
+  $("#summary-items").replaceChildren(...items);
+}
+
+// The table on step 4: one row per selection, then the totals.
+export function updateReview(totals, fmt) {
+  const row = (term, value, price = "", modifier = "") => [
+    el("dt", { class: modifier, text: term }),
+    el("dd", { class: modifier }, [
+      el("span", { text: value }),
+      el("span", { class: "review-list__price", text: price }),
+    ]),
+  ];
+
+  const rows = totals.lines.flatMap((line) => row(line.groupLabel, line.label, fmt.money(line.price)));
+  if (totals.powerKw !== null) rows.push(...row("Power", `${fmt.number(totals.powerKw)} kW`));
+  if (totals.weightKg !== null) rows.push(...row("Weight", `${fmt.number(totals.weightKg)} kg`));
+  if (totals.co2TonnesPerYear !== null) {
+    rows.push(...row("Est. CO2 per year", `≈ ${fmt.number(totals.co2TonnesPerYear)} tonnes`));
+  }
+  rows.push(...row("Total price", "", fmt.money(totals.price), "review-list__total"));
+
+  $("#review-list").replaceChildren(...rows);
+}
+
+// Explains the assumptions behind the CO2 figure, from products.json.
+export function setAssumptionsNote(assumptions, fmt) {
+  $("#summary-note").textContent =
+    `CO2 estimate assumes ${fmt.number(assumptions.annualRunningHours)} running hours per year ` +
+    `at ${Math.round(assumptions.averageLoadFactor * 100)}% average load.`;
 }
 
 // ---------------------------------------------------------------------------

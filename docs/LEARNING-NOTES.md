@@ -160,3 +160,47 @@ The error message sits below five groups, too far away on a phone. So groups sti
 ### Tested
 - Node: M250 + methanol disables heat exchanger and basic control (the case traced by hand in Stage 1); methanol resets basic control; LNG resets SCR; switching to M250 resets both fuel and cooling; new JSON-only rule works; unknown rule type is reported.
 - Browser: disabled options with correct reasons; Next with empty groups shows the error, highlights the right groups, focuses the first one; highlights clear one by one; reaching Summary; no console errors; mobile layout.
+
+---
+
+## Stage 5: Live summary and pricing
+
+**Files:** `js/pricing.js` (new), `js/ui.js`, `js/main.js`, `index.html`, `css/styles.css`
+
+### pricing.js: pure calculation functions
+`calculateTotals(data, selections)` returns everything the screen and quote need:
+```
+{ lines: [{ groupLabel, label, price, weightKg }, ...],
+  price, powerKw, baseWeightKg, adjustments, weightKg, co2TonnesPerYear }
+```
+- **Price** = engine `basePrice` + fuel `price` + each option's `price`.
+- **Weight** = sum of `weightKg`, then **modifiers** from the JSON (`weightPercent: 8` → +8%). Each percentage applies to the weight *before* modifiers, so two 5% modifiers add 10%, not 10.25%. This is a business decision, written down in a comment.
+- **CO2 per year** = kW × load factor × running hours × g fuel/kWh × t CO2/t fuel ÷ 1,000,000.
+  Example: M500 on LNG = 500 × 0.75 × 4000 × 160 × 2.75 / 1e6 = **660 t**.
+- Values that don't make sense yet return `null` (no engine → no weight, no fuel → no CO2). The UI shows "–" for `null`, which is clearer than showing 0.
+- `co2GramsPerKwh(fuel)` is reused on the fuel cards ("≈ 440 g CO2 per kWh"), so customers can compare fuels before choosing.
+- Rounding happens at the end, not on each step, to avoid adding up rounding errors.
+
+**Verified by hand:** M500 + LNG + heat exchanger + advanced + no SCR + enclosure + 5y →
+price 112,000 + 22,000 + 7,500 + 9,800 + 0 + 12,000 + 8,900 = **€172,200**;
+weight 4,100 + 450 + 120 + 15 = 4,685, +8% (375) = **5,060 kg**. The code gave the same numbers.
+
+### Why pricing is separate from rules
+`rules.js` answers "what is *allowed*?"; `pricing.js` answers "what does it *cost/weigh*?". Different reasons to change → different files (**single responsibility principle**). Both are pure, so both are unit-testable (Stage 7).
+
+### ui.js: live summary
+- `render()` in main.js now calls `calculateTotals()` and `updateSummary()` on **every** state change, so the panel can never show stale numbers.
+- **aria-live on the total price:** screen readers announce "Total price €172,200" when it changes, without the user leaving the radio they are on.
+- **`setText()` only writes when the text actually changes.** Rewriting identical text in a live region can make screen readers repeat it. Tested: 7 clicks that changed the price 6 times caused exactly 6 updates.
+- The weight figure shows *why* it's higher: "incl. +375 kg: Noise enclosure adds 8% to total weight" (label from the JSON).
+- The CO2 assumptions note under the panel is built from `data.assumptions`, so it stays correct if the JSON changes.
+
+### Review table (step 4)
+A `<dl>` with one row per selection (group, choice, price), then power, weight, CO2 and a highlighted total. It is rebuilt on each render; that's fine here because it contains nothing focusable, so no keyboard focus can be lost.
+
+### Possible improvement (not done)
+On phones the summary panel is below the form, so you have to scroll to see the price change. A small sticky "Total: €…" bar at the bottom of the screen on mobile would fix this.
+
+### Tested
+- Node: totals for a full configuration match the hand calculation; empty and partial configs return `null` where appropriate.
+- Browser: price, power, weight and CO2 update on every click; switching engine to M250 clears fuel and cooling *and* the totals drop to match (€98,700); review table correct; no console errors; desktop and mobile screenshots.
